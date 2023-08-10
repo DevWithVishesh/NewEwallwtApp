@@ -25,8 +25,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.quartz.SchedulerException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
 
 
@@ -51,6 +53,10 @@ class CustomerServiceImpTest {
 
     @Mock
     CustomerRepo customerRepo;
+
+
+    @Mock
+    PasswordEncoder passwordEncoder;
 
     @Mock
     CustomerServ customerServ;
@@ -122,7 +128,9 @@ class CustomerServiceImpTest {
         address.setAddressId(1);
         CustomerRequestDto customerRequestDto = new CustomerRequestDto();
         customerRequestDto.setEmailId(emailID);
+        customerRequestDto.setPassword("hi");
         //Case 1 : When New Customer is Registering
+        Mockito.when(passwordEncoder.encode(customerRequestDto.getPassword())).thenReturn("password");
         Mockito.when(customerRepo.findByEmailId(customerRequestDto.getEmailId())).thenReturn(Optional.empty());
         Mockito.when(addServ.addAddress(Mockito.any(Address.class))).thenReturn(address);
         Mockito.when(customerRepo.save(Mockito.any(Customer.class))).thenReturn(customer);
@@ -163,12 +171,12 @@ class CustomerServiceImpTest {
         expectedCustomer.setEmailId("a@a.com");
         expectedCustomer.setPassword(password);
         //Case 1 : when email id is valid
-        when(customerRepo.findByEmailIdAndPassword(emailID, password)).thenReturn(Optional.of(expectedCustomer));
+        when(customerRepo.findByEmailIdAndPassword(emailID, passwordEncoder.encode(password))).thenReturn(Optional.of(expectedCustomer));
         Customer actualCustomer = customerServiceImp.getCustomerByEmailAndPassword(emailID, password);
         assertEquals(expectedCustomer.getEmailId(), actualCustomer.getEmailId());
         //Case 2 : when email id is not valid
-        when(customerRepo.findByEmailIdAndPassword(emailID, password)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> customerServiceImp.getCustomerByEmailAndPassword(emailID, password));
+        when(customerRepo.findByEmailIdAndPassword(emailID , passwordEncoder.encode(password))).thenReturn(Optional.empty());
+        assertThrows(ResourceNotFoundException.class, () -> customerServiceImp.getCustomerByEmailAndPassword(emailID, passwordEncoder.encode(password)));
     }
 
 

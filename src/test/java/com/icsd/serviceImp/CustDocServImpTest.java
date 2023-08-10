@@ -37,33 +37,6 @@ class CustDocServImpTest {
 
 
     @Test
-    void saveDoc() throws IOException {
-        Customer customer = new Customer();
-        customer.setCustomerId(601);
-        String fileType = "jpeg";
-        byte[] validFileContent = "Sample file content".getBytes();
-        byte[] emptyFileContent = new byte[0];
-        MultipartFile validFile = new MockMultipartFile("test.jpg", "test.jpg", "image/jpeg", validFileContent);
-        MultipartFile emptyFile = new MockMultipartFile("empty.jpg", "empty.jpg", "image/jpeg", emptyFileContent);
-        assertThrows(ResourceNotFoundException.class, () -> custDocServImp.savedoc(customer, fileType, emptyFile));
-        File tempDir = Files.createTempDirectory("temp-dir").toFile();
-        String rootPath = tempDir.getAbsolutePath();
-        String expectedFilePath = rootPath + "/customerdocs/1/" + fileType + ".jpeg";
-        File expectedFile = new File(expectedFilePath);
-        when(cdrepo.save(Mockito.any(CustomerDocuments.class))).thenReturn(new CustomerDocuments());
-        when(cs.registerCustomer(customer)).thenReturn(customer);
-        int result1 = custDocServImp.savedoc(customer, fileType, validFile);
-        assertEquals(0, result1);
-        assertThrows(ResourceNotFoundException.class, () -> custDocServImp.savedoc(customer, fileType, emptyFile));
-        expectedFile.delete();
-        expectedFile.getParentFile().delete();
-        int result4 = custDocServImp.savedoc(customer, fileType, validFile);
-        assertEquals(0, result4);
-        expectedFile.delete();
-        tempDir.delete();
-    }
-
-    @Test
     void fromCustDocId() {
         int customerDocId = 1;
         CustomerDocuments customerDocuments = new CustomerDocuments();

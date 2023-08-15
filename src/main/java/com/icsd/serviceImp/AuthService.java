@@ -1,6 +1,6 @@
 package com.icsd.serviceImp;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.icsd.auth.AuthenticationResponse;
 import com.icsd.auth.config.JwtService;
 import com.icsd.auth.token.Token;
@@ -9,15 +9,12 @@ import com.icsd.auth.token.TokenType;
 import com.icsd.dto.CustomerLoginDTO;
 import com.icsd.model.Customer;
 import com.icsd.repo.CustomerRepo;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+
 import lombok.Data;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.List;
 
 
@@ -80,31 +77,4 @@ public class AuthService {
         tokenRepository.saveAll(validUserTokens);
     }
 
-    public void refreshToken(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) throws IOException {
-        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        final String refreshToken;
-        final String userEmail;
-        if (authHeader == null ||!authHeader.startsWith("Bearer ")) {
-            return;
-        }
-        refreshToken = authHeader.substring(7);
-        userEmail = jwtService.extractUsername(refreshToken);
-        if (userEmail != null) {
-            Customer user = repository.findByEmailId(userEmail)
-                    .orElseThrow();
-            if (jwtService.isTokenValid(refreshToken, user)) {
-                String accessToken = jwtService.generateToken(user);
-                revokeAllUserTokens(user);
-                saveUserToken(user, accessToken);
-                AuthenticationResponse authResponse = AuthenticationResponse.builder()
-                        .accessToken(accessToken)
-                        .refreshToken(refreshToken)
-                        .build();
-                new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
-            }
-        }
-    }
 }
